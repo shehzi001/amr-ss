@@ -75,7 +75,7 @@ public:
         {
           // A new valid goal was given and accepted. Notify the ActionServer
           // that we preempted and proceed to execute the action.
-          move_to_server_->setPreempted();
+          //move_to_server_->setPreempted();
         }
         else
         {
