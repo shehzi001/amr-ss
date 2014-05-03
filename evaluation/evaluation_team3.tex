@@ -1,0 +1,130 @@
+\documentclass{beamer}
+
+\mode<presentation> {
+
+\usetheme{default}
+
+\usecolortheme{beaver}
+
+\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+
+\title{Team 3 Consolidation Report} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{Daiem Nadir Ali \\ Farnando Morillo } % Your name
+\institute[HBRS] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+Hochschule Bonn-Rhein-Sieg \\ % Your institution for the title page
+\medskip
+%\textit{mnksnz@gmail.com} % Your email address
+}
+\date{03/05/2014} % Date, can be changed to a custom date
+
+\begin{document}
+%\newcommand{daiem}[0]{Ali}
+%\newcommand{farnanod}[0]{Morillo}
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+\begin{frame}
+  \frametitle{Structure}
+  The following modules were consolidated on the bases of 
+  (1)\textbf{Completness} of functionality.
+  (2)The \textbf{approach} to the underlying problem 
+  (3)\textbf{Implementation} (simple and understandable code).\\
+
+
+  \begin{enumerate}
+    \item Omni Velocity Controller
+    \item Wallfollower
+    \item Bug Brain
+  \end{enumerate}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+  \frametitle{Omni Velocity Controller}
+
+
+ \textbf{Completeness:}
+    \begin{center}
+      \begin{tabular}{| p{4cm} | p{2.7cm} | p{2.7cm} | }
+      \hline
+	\textbf{Task}  & \textbf{Ali} & \textbf{Morillo}\\ \hline
+	Vehicle drives in a straight line to goal & Yes & Curve Path\\  \hline
+	Combination of linear and angular motion & Yes & Yes\\  \hline
+	Robot decreases speed when its near the goal & Yes & based on distance(not good)\\  \hline
+      \end{tabular}
+  \end{center}
+  \textbf{Approach:}
+  \begin{center}
+   \text{Morillo approch achives all tasks.}
+  \end{center}
+  
+  \textbf{Implementation:}
+  \begin{center}
+   \text{Morillo has good documentation and understandable code.}
+  \end{center}
+\end{frame}
+
+%------------------------------------------------
+\begin{frame}
+  \frametitle{Wall Follower}
+
+
+ \textbf{Completeness:}
+    \begin{center}
+      \begin{tabular}{| p{4cm} | p{2.7cm} | p{2.7cm} | }
+      \hline
+	\textbf{Task}  & \textbf{Ali} & \textbf{Morillo}\\ \hline
+	Robot is able to follow a straight wall & Yes & Yes\\  \hline
+	Robot can also handle convex and concave curves & No & Yes\\  \hline
+	Variable distance to wall & No & Yes\\  \hline
+	Switchable right/left wallfollowing mode & Yes & Yes\\  \hline
+      \end{tabular}
+  \end{center}
+  \textbf{Approach:}
+  \begin{center}
+   \text{Morillo approch achives all tasks.}
+  \end{center}
+  
+  \textbf{Implementation:}
+  \begin{center}
+   \text{Morillo's implementation does not fail in test scenarios.}
+  \end{center}
+\end{frame}
+
+
+%------------------------------------------------
+\begin{frame}
+  \frametitle{Bug Brain}
+
+
+ \textbf{Completeness:}
+    \begin{center}
+      \begin{tabular}{| p{4cm} | p{2.7cm} | p{2.7cm} | }
+      \hline
+	\textbf{Task}  & \textbf{Ali} & \textbf{Morillo}\\ \hline
+	Avoids simple obstacles & Yes & Yes\\  \hline
+	Avoids advanced obstacles & Yes & No\\  \hline
+	Detects if goal is unreachable & Yes & No\\  \hline
+	Checks on which side of the wall the obstacle is & Yes & Yes\\  \hline
+      \end{tabular}
+  \end{center}
+  \textbf{Approach:}
+  \begin{center}
+   \text{Morillo's and Ali's approch achives all tasks.}
+  \end{center}
+  
+  \textbf{Implementation:}
+  \begin{center}
+   Ali's implementation does not fail in any test scenarios and has a simpler implementation.
+  \end{center}
+\end{frame}
+
+
+\end{document} 
