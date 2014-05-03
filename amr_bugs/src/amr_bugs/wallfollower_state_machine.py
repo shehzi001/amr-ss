@@ -21,35 +21,66 @@ import roslib
 roslib.load_manifest(PACKAGE)
 import smach
 from preemptable_state import PreemptableState
-from math import copysign
+from math import copysign, sqrt, radians, cos
 from types import MethodType
 from geometry_msgs.msg import Twist
+
+import rospy
 
 
 __all__ = ['construct']
 
-#=============================== YOUR CODE HERE ===============================
-# Instructions: write a function for each state of wallfollower state machine.
-#               The function should have exactly one argument (userdata
-#               dictionary), which you should use to access the input ranges
-#               and to provide the output velocity.
-#               The function should have at least one 'return' statement, which
-#               returns one of the possible outcomes of the state.
-#               The function should not block (i.e. have infinite loops), but
-#               rather it should implement just one iteration (check
-#               conditions, compute velocity), because it will be called
-#               regularly from the state machine.
-#
-# Hint: below is an example of a state that moves the robot forward until the
-#       front sonar readings are less than the desired clearance. It assumes
-#       that the corresponding variables ('front_min' and 'clearance') are
-#       available in the userdata dictionary.
-#
-#           def search(ud):
-#               if ud.front_min < ud.clearance:
-#                   return 'found_obstacle'
-#               ud.velocity = (1, 0, 0)
+# Aligns the vehicle to the wall.
+def align_to_wall(ud):
+    if abs(ud.side_difference) < ud.aligned_limit and ud.side_min < 1.0:
+        return 'follow_wall'
+        
+    ud.velocity = (0, 0, ud.speed_max)
+    pass
 
+# Moves in a spiral to find an object with its side.
+def find_wall(ud):
+    # Switches to state align to wall, if the vehicle is not aligned to wall.
+    if abs(ud.side_difference) >= ud.aligned_limit:
+        return 'align_to_wall'
+    
+    # Switches to state follow wall, if the range is lower than maximum. That means there is an object.
+    if ud.side_min < ud.range_max:
+        return 'follow_wall'
+    
+    # Angular Velocity is reduced to make the spiral bigger.
+    ud.spiral_speed = max(ud.spiral_speed - 0.001, 0.1)
+    ud.velocity = (ud.speed_max, 0, ud.spiral_speed)
+    pass
+
+# Follows a wall.
+def follow_wall(ud):
+    # Switches to find wall. if range is maximum. That means there is no object to follow.
+    if ud.side_min >= ud.range_max:
+        ud.spiral_speed = ud.spiral_speed_max
+        return 'find_wall'
+    
+    # The sensor used to detect obstacle in front of the vehicle is at 30 degrees and the distance to
+    # the middle sensor is 60 degrees. If the vehicle follows the wall, than this sensor should have 
+    # the range: clearance/cos(60). If that is smaller, than there is and object in front of the vehicle.
+    front_clearance = ud.clearance / cos(radians(60))
+    
+    # Error values for the P-Controller are calculated.
+    error_angle = ud.side_difference
+    error_distance = ud.clearance - ud.side_min
+    error_edge = max(front_clearance - ud.range_front, -0.01)
+    
+    # Sum of the angle error
+    ud.error_angle_sum = min(max(ud.error_angle_sum + error_angle + error_edge, -3), 3)
+    
+    # P-Controllers for all speeds and speeds are limites, angular speed has also an I-Part
+    angular_speed = min(max(0.5 * error_angle + ud.error_angle_sum * 0.03 + 2.0 * error_edge, -ud.speed_max), ud.speed_max)
+    side_speed = min(max(1.0 * error_distance, -ud.speed_max), ud.speed_max) 
+    # Forward speed gets reduces by the size of angular speed, to make better turns.
+    forward_speed = min(max(ud.speed_max - abs(angular_speed), 0), ud.speed_max)
+       
+    ud.velocity = (forward_speed, side_speed, angular_speed)
+    pass
 
 #==============================================================================
 
@@ -58,36 +89,17 @@ def set_ranges(self, ranges):
     This function will be attached to the constructed wallfollower machine.
     Its argument is a list of Range messages as received by a sonar callback.
     """
-    #============================= YOUR CODE HERE =============================
-    # Instructions: store the ranges from a ROS message into the userdata
-    #               dictionary of the state machine.
-    #               'ranges' is a list or Range messages (that should be
-    #               familiar to you by now). It implies that to access the
-    #               actual range reading of, say, sonar number 3, you need to
-    #               write:
-    #
-    #                   ranges[3].range
-    #
-    #               For example, to create an item called 'front_min', which
-    #               contains the minimum between the ranges reported by the two
-    #               front sonars, you would write the following:
-    #
-    #                   self.userdata.front_min = min(ranges[3].range, ranges[4].range)
-    #
-    # Hint: you can just store the whole array of the range readings, but to
-    #       simplify the code in your state functions, you may compute
-    #       additional values, e.g. the difference between the reading of the
-    #       side sonars, or the minimum of all sonar readings, etc.
-    #
-    # Hint: you can access all the variables stored in userdata. This includes
-    #       the current settings of the wallfollower (that is clearance and the
-    #       mode of wallfollowing). Think about how you could make your state
-    #       functions independent of wallfollowing mode by smart preprocessing
-    #       of the sonar readings.
-
-
-    #==========================================================================
-
+    # Switches the sensors based on which side is used to follow a wall.
+    if self.userdata.mode == 0:
+        self.userdata.full_side_min = min(ranges[0].range, ranges[1].range, ranges[14].range, ranges[15].range)
+        self.userdata.side_min = min(ranges[0].range, ranges[15].range)
+        self.userdata.side_difference = ranges[15].range - ranges[0].range
+        self.userdata.range_front = ranges[2].range
+    elif self.userdata.mode == 1:
+        self.userdata.full_side_min = min(ranges[6].range, ranges[7].range, ranges[8].range, ranges[9].range)
+        self.userdata.side_min = min(ranges[7].range, ranges[8].range)
+        self.userdata.side_difference = ranges[8].range - ranges[7].range
+        self.userdata.range_front = ranges[5].range
 
 def get_twist(self):
     """
@@ -97,24 +109,20 @@ def get_twist(self):
     machine userdata.
     """
     twist = Twist()
-    twist.linear.x = self.userdata.velocity[0]
-    twist.linear.y = self.userdata.velocity[1]
     twist.linear.z = 0
     twist.angular.x = 0
     twist.angular.y = 0
-    twist.angular.z = self.userdata.velocity[2]
-    #============================= YOUR CODE HERE =============================
-    # Instructions: although this function is implemented, you may need to
-    #               slightly tweak it if you decided to handle wallfolllowing
-    #               mode in "the smart way".
-    # Hint: state machine userdata is accessible in this function as well, for
-    #       example you can read the current wallfollowing mode with
-    #
-    #           self.userdata.mode
-    #
-
-
-    #==========================================================================
+    
+    # Switches the sign of the output based on which side is used to follow a wall.
+    if self.userdata.mode == 0:
+        twist.linear.x = self.userdata.velocity[0]
+        twist.linear.y = -self.userdata.velocity[1]
+        twist.angular.z = -self.userdata.velocity[2]
+    elif self.userdata.mode == 1:
+        twist.linear.x = self.userdata.velocity[0]
+        twist.linear.y = self.userdata.velocity[1]
+        twist.angular.z = self.userdata.velocity[2]
+        
     return twist
 
 
@@ -135,41 +143,44 @@ def construct():
     # Attach helper functions
     sm.set_ranges = MethodType(set_ranges, sm, sm.__class__)
     sm.get_twist = MethodType(get_twist, sm, sm.__class__)
-    sm.set_config = MethodType(set_config, sm, sm.__class__)
+    sm.set_config = MethodType(set_config, sm, sm.__class__)    
     # Set initial values in userdata
     sm.userdata.velocity = (0, 0, 0)
     sm.userdata.mode = 1
-    sm.userdata.clearance = 0.6
-    sm.userdata.ranges = None
+    sm.userdata.clearance = 0.5
+    sm.userdata.spiral_speed_max = 0.7
+    sm.userdata.spiral_speed = sm.userdata.spiral_speed_max    
+    sm.userdata.full_side_min = 0
+    sm.userdata.side_min = 0
+    sm.userdata.side_difference = 0
+    sm.userdata.range_front = 0
+    sm.userdata.range_max = 5.0
+    sm.userdata.speed_max = 0.5
+    sm.userdata.aligned_limit = 0.2
+    sm.userdata.error_angle_sum = 0
+    
     # Add states
     with sm:
-        #=========================== YOUR CODE HERE ===========================
-        # Instructions: construct the state machine by adding the states that
-        #               you have implemented.
-        #               Below is an example how to add a state:
-        #
-        #                   smach.StateMachine.add('SEARCH',
-        #                                          PreemptableState(search,
-        #                                                           input_keys=['front_min', 'clearance'],
-        #                                                           output_keys=['velocity'],
-        #                                                           outcomes=['found_obstacle']),
-        #                                          transitions={'found_obstacle': 'ANOTHER_STATE'})
-        #
-        #               First argument is the state label, an arbitrary string
-        #               (by convention should be uppercase). Second argument is
-        #               an object that implements the state. In our case an
-        #               instance of the helper class PreemptableState is
-        #               created, and the state function in passed. Moreover,
-        #               we have to specify which keys in the userdata the
-        #               function will need to access for reading (input_keys)
-        #               and for writing (output_keys), and the list of possible
-        #               outcomes of the state. Finally, the transitions are
-        #               specified. Normally you would have one transition per
-        #               state outcome.
-        #
-        # Note: The first state that you add will become the initial state of
-        #       the state machine.
-
-
-        #======================================================================
+        smach.StateMachine.add('ALIGN_TO_WALL',
+                               PreemptableState(align_to_wall,
+                                                input_keys=['side_min', 'range_max', 'side_difference', 'speed_max', 'aligned_limit'],
+                                                output_keys=['velocity'],
+                                                outcomes=['follow_wall', 'find_wall']),
+                               transitions={'follow_wall': 'FOLLOW_WALL',
+                                            'find_wall': 'FIND_WALL'})
+        
+        smach.StateMachine.add('FIND_WALL',
+                               PreemptableState(find_wall,
+                                                input_keys=['speed_max', 'side_min', 'side_difference', 'range_max', 'spiral_speed', 'aligned_limit'],
+                                                output_keys=['velocity', 'spiral_speed'],
+                                                outcomes=['follow_wall', 'align_to_wall']),
+                               transitions={'follow_wall': 'FOLLOW_WALL',
+                                            'align_to_wall': 'ALIGN_TO_WALL'})
+        
+        smach.StateMachine.add('FOLLOW_WALL',
+                               PreemptableState(follow_wall,
+                                                input_keys=['error_angle_sum', 'speed_max', 'side_difference', 'range_max', 'range_front', 'side_min', 'clearance', 'spiral_speed', 'spiral_speed_max'],
+                                                output_keys=['velocity', 'spiral_speed', 'error_angle_sum'],
+                                                outcomes=['find_wall']),
+                               transitions={'find_wall': 'FIND_WALL'})
     return sm
