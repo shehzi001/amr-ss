@@ -1,3 +1,26 @@
+/** Description of behavior:
+  *
+  * Braitenberg Type A:
+  * In this mode the vehicle tries not to crush into obstacles. The vehicle dodges sideways.
+  * If the transmission factor is to small the vehicle is slow, can not make fast turns and can still crash.
+  * If it is to high and the vehicle is driving between obstacles the vehicle the rotation angle oscillates.
+  * And if the factor is negative, the vehicle drives perpendicular away from the obstacle.
+  *
+  * Braitenberg Type B:
+  * A Braitenberg type B  tries to reach a light source. In our case that is an obstacle and so the vehicle
+  * drives perpendicular to the object and crashes. If the transmission factor is negative, the vehicle drives
+  * sideways away from an obstacle.
+  *
+  * Braitenberg Type C:
+  * In this combined mode the turn behaviors of the type A and type B vehicle cancel each other out, but the
+  * speed is combined. So if the transmission factor of the type A behavior is higher than the transmission
+  * factor for type B than the vehicle tries not to crash into an obstacle. The difference to a pure type
+  * A vehicle is than, that it's speed is higher but the turn speed is damped. If the transmission factor of
+  * the type B behavior is higher, than the vehicle crashes. If the factors are negative, than the vehicle
+  * drives away from the obstacle. And depending on which type has the lowest transmission, the vehicle drives
+  * sideways or perpendicular away. */
+
+
 #include <ros/ros.h>
 #include <ros/console.h>
 #include <dynamic_reconfigure/server.h>
@@ -17,16 +40,11 @@ BraitenbergVehicle::UPtr vehicle;
   * field through the rqt_reconfigure interface. */
 void reconfigureCallback(amr_braitenberg::BraitenbergVehicleConfig &config, uint32_t level)
 {
-  //==================== YOUR CODE HERE ====================
-  // Instructions: create a new instance of Braitenberg
-  //               vehicle with the supplied parameters.
-  //
-  // Hint: to create an instance of smart pointer use the
-  //       following construction:
-  //       vehicle = BraitenbergVehicle::UPtr(new BraitenbergVehicle(...))
-
-
-  // =======================================================
+  /** To reconfigure a new braitenberg vehicle is created and appointed.
+    * Because the config.type is an int value it is beeing casted to the braitenberg vehicle type. */
+  vehicle = BraitenbergVehicle::UPtr(new BraitenbergVehicle(static_cast<BraitenbergVehicle::Type>(config.type),
+                                                            config.factor1,
+                                                            config.factor2));
 
   ROS_INFO("Vehicle reconfigured: type %i, factors %.2f and %.2f", config.type, config.factor1, config.factor2);
 }
@@ -37,15 +55,13 @@ void sonarCallback(const amr_msgs::Ranges::ConstPtr& msg)
 {
   amr_msgs::WheelSpeeds m;
 
-  //==================== YOUR CODE HERE ====================
-  // Instructions: based on the ranges reported by the two
-  //               sonars compute the wheel speds and fill
-  //               in the WheelSpeeds message.
-  //
-  // Hint: use vehicle->computeWheelSpeeds(...) function.
-
-
-  // =======================================================
+  /** To calculate the wheel speeds, the output from the lasers and the speeds are given to the
+    * computeWheelSpeeds methods. Because WheelSpeeds is a vector with zero elemnts it's resized
+    * to store two speeds for the left and right wheel. The handover of the speeds is done by
+    * call-by-reference, so that a return is not needed. Values from the sensors are beeing
+    * normalized here as well. */
+  m.speeds.resize(2);
+  vehicle->computeWheelSpeeds(msg->ranges[0].range / msg->ranges[0].max_range, msg->ranges[1].range / msg->ranges[1].max_range, m.speeds.at(0), m.speeds.at(1));
 
   wheel_speeds_publisher.publish(m);
   ROS_DEBUG("[%.2f %.2f] --> [%.2f %.2f]", msg->ranges[0].range, msg->ranges[1].range, m.speeds[0], m.speeds[1]);

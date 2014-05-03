@@ -21,12 +21,11 @@ void wheelSpeedCallback(const amr_msgs::WheelSpeeds::ConstPtr& msg)
 
   geometry_msgs::Twist twist;
 
-  //==================== YOUR CODE HERE ====================
-  // Instructions: compute linear and angular components and
-  //               fill in the twist message.
-
-
-  //========================================================
+  /** The formulars used for this emulator are:
+    * v = (r/2) * (vr + vl)   and   w = (r/D) * (vr - vl)
+    * vr, vl and w are in [rad/s] and v in [m/s]. */
+  twist.linear.x = (wheel_diameter / (2.0 * 2.0)) * (msg->speeds.at(0) + msg->speeds.at(1));
+  twist.angular.z = (wheel_diameter / (distance_between_wheels * 2.0)) * (msg->speeds.at(0) - msg->speeds.at(1));
 
   velocity_publisher.publish(twist);
   ROS_DEBUG("[%.2f %.2f] --> [%.2f %.2f]", msg->speeds[0], msg->speeds[1], twist.linear.x, twist.angular.z);

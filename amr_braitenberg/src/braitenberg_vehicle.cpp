@@ -14,15 +14,24 @@ BraitenbergVehicle::BraitenbergVehicle(Type type, float factor1, float factor2)
 {
 }
 
+/** Depending on the Braitenberg type, the input is mapped to the output.
+  * The factor1 and factor2 are used to scale the output values. And the input values
+  * are normalized by dividing them through 4, because that is the maximum input value. */
 void BraitenbergVehicle::computeWheelSpeeds(float left_in, float right_in, float& left_out, float& right_out)
 {
-  //==================== YOUR CODE HERE ====================
-  // Instructions: based on the input from the left and
-  //               right sonars compute the speeds of the
-  //               wheels. Use the parameters stored in the
-  //               private fields type_, factor1_, and
-  //               factor2_ (if applicable).
-
-
-  // =======================================================
+  switch (this->type_)
+  {
+    case TYPE_A:
+      left_out = this->factor1_ * left_in;
+      right_out = this->factor1_ * right_in;
+      break;
+    case TYPE_B:
+      left_out = this->factor1_ * right_in;
+      right_out = this->factor1_ * left_in;
+      break;
+    case TYPE_C:
+      left_out = this->factor1_ * left_in + this->factor2_ * right_in;
+      right_out = this->factor1_ * right_in + this->factor2_ * left_in;
+      break;
+  }
 }
