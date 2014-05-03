@@ -50,6 +50,7 @@ public:
     * "move_to" server. */
   void moveToCallback(const amr_msgs::MoveToGoalConstPtr& goal)
   {
+
     ROS_INFO("Received [move_to] action command.");
 
     if (!setNewGoal(goal))
@@ -75,7 +76,7 @@ public:
         {
           // A new valid goal was given and accepted. Notify the ActionServer
           // that we preempted and proceed to execute the action.
-          //move_to_server_->setPreempted();
+          // move_to_server_->setPreempted();
         }
         else
         {
@@ -283,17 +284,14 @@ private:
         )
       );
     }
-    else
+    else if (controller == "omni")
     {
-      //========================= YOUR CODE HERE =========================
-      // Instructions: create an instance of OmniVelocityController.
-      //
-      // Hint: you may copy-paste from the DiffVelocityController case
-      //       and adjust the arguments in the call to the constructor to
-      //       conform to what you have implemented in that class.
-
-
-      //==================================================================
+      velocity_controller_ = VelocityController::UPtr(
+        new OmniVelocityController(
+          max_linear_velocity, max_linear_acceleration,linear_tolerance,
+          max_angular_velocity, max_angular_acceleration, angular_tolerance
+        )
+      );
     }
   }
 
