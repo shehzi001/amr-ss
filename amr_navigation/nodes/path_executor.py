@@ -68,7 +68,7 @@ class PathExecutor:
                 self.path_index += 1
                 
                 # If waypoint is unreachable and it's not allowed to skip a waypoint, path executor aborts.
-                if self.waypoint_unreachable and action_path.skip_unreachable:
+                if self.waypoint_unreachable and not action_path.skip_unreachable:
                     self.server.set_aborted(self.result)
                     rospy.logwarn("Aborted path execution")
                     break
