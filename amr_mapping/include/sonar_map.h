@@ -237,6 +237,7 @@ private:
   mapstore::MapStore map_;
   mapstore::MapStore map_free_;
   mapstore::MapStore map_occupied_;
+  mapstore::MapStore map_tmp_occupied_;
 
 };
 
