@@ -89,7 +89,7 @@ public:
   void run()
   {
     world_->Start();
-    while(ros::ok() && !world_->UpdateAll())
+    while(ros::ok())
     {
       ros::spinOnce();
       Fl::wait();
