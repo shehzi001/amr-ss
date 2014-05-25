@@ -30,10 +30,6 @@ void SonarMap::addScan(double sonar_x, double sonar_y, double sonar_theta, doubl
   double empty_old = 0, empty_new = 0;
   double occupied_old= 0, occupied_new = 0, occupied_sum = 0;
 
-  // If distance equals max_range, the sensor is not detecting an obstacle
-  // To not obscure the possibilities, distance is set to a much higher value
-  if (distance >= max_range) { distance = max_range * 2; }
-
   // Calculates possibilities, the occupied sum and updates empty map
   mapstore::MapStoreCone cone = mapstore::MapStoreCone(sonar_x / resolution_, sonar_y / resolution_, sonar_theta, fov, max_range / resolution_);
   while (cone.nextCell(cell_x, cell_y))
@@ -49,17 +45,20 @@ void SonarMap::addScan(double sonar_x, double sonar_y, double sonar_theta, doubl
       erocc = ErOcc(distance, distance_to_cell, uncertainty);
       ea = Ea(fov, theta_to_cell);
 
+      // If distance equals max_range, the sensor is not detecting an obstacle and the occupied possibility should be 0
+      if (distance >= max_range) { erocc = 0.0; }
+
       // Updates the empty map
       empty_new = erfree * ea;
+      clamp(empty_new, 0.0, 1.0);
       empty_old = map_free_.get(cell_x, cell_y);
       empty_new = empty_old + empty_new - (empty_old * empty_new);
-      clamp(empty_new, 0.0, 1.0);
       map_free_.set(cell_x, cell_y, empty_new);
 
       // Creates occupied error sum
       occupied_new = erocc * ea;
-      occupied_new = occupied_new * (1.0 - empty_new);
       clamp(occupied_new, 0.0, 1.0);
+      occupied_new = occupied_new * (1.0 - empty_new);
       occupied_sum = occupied_sum + occupied_new;
 
       // Stores occ_new in temporary occupied map
