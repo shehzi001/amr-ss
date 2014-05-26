@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(amr_mapping)
+project(amr_localization)
 
 # Load catkin and all dependencies required for this package
-find_package(catkin REQUIRED 
+find_package(catkin REQUIRED
   COMPONENTS
     roscpp
-    nav_msgs
     tf
+    visualization_msgs
     amr_msgs
     amr_srvs
     amr_stage
+    amr_mapping
 )
 
 include_directories(include
@@ -50,65 +51,25 @@ add_definitions(-Wno-error=unknown-pragmas)
 add_definitions(-Wno-unknown-pragmas)
 add_definitions(-Wno-deprecated)
 
-#...: determine OS type
-if((CMAKE_SIZEOF_VOID_P MATCHES 4) OR (CMAKE_CL_64 MATCHES 0))
-  set(SUFFIX _x32)
-elseif((CMAKE_SIZEOF_VOID_P MATCHES 8) OR (CMAKE_CL_64 MATCHES 1))
-  set(SUFFIX _x64)
-else()
-  message(SEND_ERROR "Unable to determine whether the OS is 32 or 64 bit.")
-endif()
+#...: target executables :......................................................
 
-
-#...: target libraries :......................................................
-
-add_library(mapstore${SUFFIX}
-  src/map_store.cpp
-  src/map_store_beam.cpp
-  src/map_store_cone.cpp
-  src/map_store_circle.cpp
+#...: pose_likelihood_server
+add_executable(pose_likelihood_server
+  nodes/pose_likelihood_server.cpp
 )
 
-#...: target executables :....................................................
-
-#...: sonar_mapper
-add_executable(sonar_mapper
-  nodes/sonar_mapper.cpp
-  src/sonar_map.cpp
-)
-target_link_libraries(sonar_mapper
-  mapstore${SUFFIX}
-)
-
-add_dependencies(sonar_mapper 
+add_dependencies(pose_likelihood_server 
   ${catkin_EXPORTED_TARGETS}
 )
 
-target_link_libraries(sonar_mapper 
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-)
-
-#...: occupancy_query_server
-add_executable(occupancy_query_server
-  nodes/occupancy_query_server.cpp
-)
-target_link_libraries(occupancy_query_server
-  mapstore${SUFFIX}
-)
-
-add_dependencies(occupancy_query_server 
-  ${catkin_EXPORTED_TARGETS}
-)
-
-target_link_libraries(occupancy_query_server 
+target_link_libraries(pose_likelihood_server 
   ${Boost_LIBRARIES}
   ${catkin_LIBRARIES}
 )
 
 catkin_package(
     DEPENDS
-    CATKIN_DEPENDS roscpp nav_msgs tf amr_msgs amr_srvs amr_stage
+    CATKIN_DEPENDS roscpp tf visualization_msgs amr_msgs amr_srvs amr_stage amr_mapping
     INCLUDE_DIRS
     LIBRARIES
 )
