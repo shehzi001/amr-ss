@@ -5,10 +5,10 @@ define hokuyosensor sensor
 (
   range [ 0.0 4.0 ]
   pose [ 0 0 0.1 0 ]
-  fov 240
+  fov 360
   # The real number of beams is 683,
-  # however 12 is enough for our purposes.
-  samples 12
+  # however 180 is enough for our purposes.
+  samples 16
   color_rgba [1 0 0 0.15]
 )
 
