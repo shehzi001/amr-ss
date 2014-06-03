@@ -86,9 +86,10 @@ public:
 
     if (beam_client_.call(srv_pointonbeam))
     {
-      double sigma = 0.5;
-      double sum = 0.0;
+      double sigma = 0.4;
       double w = 0.0;
+      double product = 1.0;
+      int count = 0;
 
       for (int i = 0; i < no_of_lasers; i++)
       {
@@ -100,15 +101,15 @@ public:
 
         // Compute the probabilities
         w = (1.0 / (sigma * sqrt(2.0 * M_PI))) * (exp(-pow((z_f[i] - z_r[i]), 2) / (2.0 * pow(sigma, 2))));
-        sum = sum + w;
+
+        if (std::abs(z_f[i]-z_r[i]) < (sigma * 2)) { product = product * w; }
+        else { count++; }
       }
 
-      double average_prob = sum / no_of_lasers;
+      // Respond as likelihood
+      if (count < 3) { response.likelihood = product; }
+      else { response.likelihood = 0.0; }
 
-      // Clamping probablities
-      if (average_prob > 1.0) { average_prob = 1.0; }
-
-      response.likelihood = average_prob;// Respond as likelihood
       return true;
     }
     else
