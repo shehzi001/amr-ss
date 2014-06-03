@@ -86,7 +86,7 @@ public:
 
     if (beam_client_.call(srv_pointonbeam))
     {
-      double sigma = 0.4;
+      double sigma = 0.5;
       double sum = 0.0;
       double w = 0.0;
 
