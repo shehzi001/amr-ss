@@ -83,21 +83,6 @@ target_link_libraries(particle_filter
   ${catkin_LIBRARIES}
 )
 
-#...: motion_model_test
-add_executable(motion_model_test
-  nodes/motion_model_test.cpp
-  src/particle_visualizer.cpp
-)
-
-add_dependencies(motion_model_test 
-  ${catkin_EXPORTED_TARGETS}
-)
-
-target_link_libraries(motion_model_test 
-  ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
-)
-
 catkin_package(
     DEPENDS
     CATKIN_DEPENDS roscpp tf visualization_msgs amr_msgs amr_srvs amr_stage amr_mapping
