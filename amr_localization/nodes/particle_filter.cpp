@@ -42,6 +42,9 @@ public:
     particle_filter_ = ParticleFilter::UPtr(new ParticleFilter(min_x, max_x, min_y, max_y, std::bind(&ParticleFilterNode::computeParticleWeight, this, std::placeholders::_1)));
     particle_visualizer_ = ParticleVisualizer::UPtr(new ParticleVisualizer("particles", "odom"));
 
+    // Quick Fix, reason is updateCallback: transform is used even though an error was catched, which happens at the start
+    ros::Duration(1.0).sleep();
+
     // Schedule periodic filter updates
     update_timer_ = nh_.createTimer(ros::Rate(update_rate).expectedCycleTime(), &ParticleFilterNode::updateCallback, this);
 
@@ -94,7 +97,7 @@ public:
     double avg_weight = std::accumulate(p.begin(), p.end(), 0.0, [](double sum, Particle p) { return sum + p.weight; }) / p.size();
     particle_visualizer_->publish(p);
     broadcastTransform();
-    ROS_INFO("Motion: [%.3f, %.3f, %.3f] Average partile weight: %3f", forward, lateral, yaw, avg_weight);
+    ROS_INFO("Motion: [%.3f, %.3f, %.3f] Average particle weight: %3f", forward, lateral, yaw, avg_weight);
   }
 
   /** Broadcast the current estimation of robot's position. */

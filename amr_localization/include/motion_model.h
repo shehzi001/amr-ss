@@ -12,7 +12,7 @@
   * The two parameters of the class is standard deviations of translational and
   * rotational components of the motion.
   *
-  * The motion is decomposed into two translations alond the x axis of the
+  * The motion is decomposed into two translations along the x axis of the
   * robot (forward), and along the y axis of the robot (lateral), and one
   * rotation.
   *
@@ -69,9 +69,30 @@ public:
     //
     //           double error = distribution_trans_(generator_);
     //
-
-
     //==========================================================================
+
+    //Use forward, lateral, rotation to get desired motion delta_rot1, delta_trans, delta_rot2.(slide 25 localization 2)
+    double delta_trans = sqrt(pow(forward_,2) + pow(lateral_,2));
+    double delta_rot1 = atan2(lateral_,forward_);
+    double delta_rot2 = rotation_;
+
+    //Assign the noise distributions
+    double trans_error = distribution_trans_(generator_);
+    double rot1_error = distribution_rot_(generator_);
+    double rot2_error = distribution_rot_(generator_);
+
+    //Add noise
+    double delta_trans_hat = delta_trans + trans_error;
+    double delta_rot1_hat = delta_rot1 + rot1_error;
+    double delta_rot2_hat = delta_rot2 + rot2_error;
+
+    //Get the new pose
+    Pose new_pose;
+    new_pose.x = pose.x + delta_trans_hat * cos(rotation_ + delta_rot1_hat);
+    new_pose.y = pose.y + delta_trans_hat * sin(rotation_ + delta_rot2_hat);
+    new_pose.theta = normalizeAngle(pose.theta + delta_rot1_hat + delta_rot2_hat);
+
+    return new_pose;
   }
 
 private:

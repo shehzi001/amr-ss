@@ -85,6 +85,8 @@ private:
   // A helper object that will generate biased/unbiased random particles
   RandomParticleGenerator random_particle_generator_;
 
+  bool is_initialized;
+
 };
 
 #endif /* PARTICLE_FILTER_H */

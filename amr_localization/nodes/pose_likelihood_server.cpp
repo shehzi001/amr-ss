@@ -74,6 +74,7 @@ public:
     for (int i = 0; i < no_of_lasers; i++)
     {
       query_input = pose_tf * laser_transform;// Transforming beam_pose from base link to odom
+
       // Extracting beam_pose x,y,theta w.r.t odom
       beams_poses[i].x = query_input.getOrigin().getX();
       beams_poses[i].y = query_input.getOrigin().getY();
@@ -90,6 +91,7 @@ public:
       double w = 0.0;
       double sum = 0.0;
       double average_prob = 0.0;
+      int count = 0;
 
       for (int i = 0; i < no_of_lasers; i++)
       {
@@ -103,16 +105,18 @@ public:
         w = (1.0 / (sigma * sqrt(2.0 * M_PI))) * (exp(-pow((z_f[i] - z_r[i]), 2) / (2.0 * pow(sigma, 2))));
 
         sum = sum + w;
+        if (std::abs(z_f[i]-z_r[i]) < (sigma * 2)) { count ++; }
       }
 
       average_prob = sum / no_of_lasers;
 
-      // Clamping probablities
+      // Clamping probabilities
       if (average_prob > 1.0) { average_prob = 1.0; }
       else if (average_prob < 0.0) { average_prob = 0.0; }
 
       // Respond as likelihood
-      response.likelihood = average_prob;
+      if (count < 12) { response.likelihood = 0; }
+      else { response.likelihood = average_prob; }
 
       return true;
     }
