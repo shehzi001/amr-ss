@@ -115,8 +115,9 @@ public:
       else if (average_prob < 0.0) { average_prob = 0.0; }
 
       // Respond as likelihood
-      if (count < 12) { response.likelihood = 0; }
-      else { response.likelihood = average_prob; }
+      response.likelihood = average_prob;
+//      if (count < 12) { response.likelihood = 0; }
+//      else { response.likelihood = average_prob; }
 
       return true;
     }

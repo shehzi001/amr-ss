@@ -57,24 +57,14 @@ public:
     * the robot was in given pose. */
   Pose sample(const Pose& pose)
   {
-    //============================== YOUR CODE HERE ============================
-    // Instructions: given the starting pose, compute the new pose according to
-    //               the motion model. Note that both input and output pose are
-    //               in world coordinate frame, but the motion parameters are
-    //               in robot's reference frame.
-    //
-    // Hint: there are two member fields that represent translational and
-    //       rotational error distributions. For example, to get a random
-    //       translational error use:
-    //
-    //           double error = distribution_trans_(generator_);
-    //
-    //==========================================================================
+    // Rotation of the motion
+    double x_motion = forward_ * cos(-pose.theta) + lateral_ * sin(-pose.theta);
+    double y_motion = -forward_ * sin(-pose.theta) + lateral_ * cos(-pose.theta);
 
     //Use forward, lateral, rotation to get desired motion delta_rot1, delta_trans, delta_rot2.(slide 25 localization 2)
-    double delta_trans = sqrt(pow(forward_,2) + pow(lateral_,2));
-    double delta_rot1 = atan2(lateral_,forward_);
-    double delta_rot2 = rotation_;
+    double delta_trans = sqrt(pow(x_motion, 2) + pow(y_motion, 2));
+    double delta_rot1 = atan2(y_motion, x_motion);
+    double delta_rot2 = rotation_ - delta_rot1;
 
     //Assign the noise distributions
     double trans_error = distribution_trans_(generator_);
@@ -89,7 +79,7 @@ public:
     //Get the new pose
     Pose new_pose;
     new_pose.x = pose.x + delta_trans_hat * cos(rotation_ + delta_rot1_hat);
-    new_pose.y = pose.y + delta_trans_hat * sin(rotation_ + delta_rot2_hat);
+    new_pose.y = pose.y + delta_trans_hat * sin(rotation_ + delta_rot1_hat);
     new_pose.theta = normalizeAngle(pose.theta + delta_rot1_hat + delta_rot2_hat);
 
     return new_pose;

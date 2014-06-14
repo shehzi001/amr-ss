@@ -139,7 +139,7 @@ public:
   void poseEstimateCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose_estimate)
   {
     Pose p;
-    p.x = pose_estimate->pose.pose.position.x;
+    p.x = pose_estimate->pose.pose.position.x;https://www7.inf.fh-bonn-rhein-sieg.de/moodle/file.php/1002/Lab/MR_Lab_2014-05-27.pdf
     p.y = pose_estimate->pose.pose.position.y;
     p.theta = tf::getYaw(pose_estimate->pose.pose.orientation);
     ROS_INFO_STREAM("Received pose estimate " << p << ", forwarding it to the ParticleFilter object.");

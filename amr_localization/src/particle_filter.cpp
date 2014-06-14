@@ -33,6 +33,11 @@ void ParticleFilter::update(double x, double y, double yaw)// desired motion
   ParticleVector particles_resampled;
   particles_resampled.resize(particle_set_size_);
 
+  int new_samples;
+  int sample_to_replace;
+
+  motion_model_.setMotion(x, y, yaw);
+
   // Create initial particle set
   if (!is_initialized)
   {
@@ -82,11 +87,19 @@ void ParticleFilter::update(double x, double y, double yaw)// desired motion
   // Filtering bad samples out and create new ones
   for (int i = 0; i < particle_set_size_; i++)
   {
-    if (particles_resampled.at(i).weight < 0.1)
+    if (particles_resampled.at(i).weight < 0.5)
     {
       particles_resampled.at(i) = random_particle_generator_.generateParticle();
     }
   }
+
+  // Replace 25% of the samples
+//  new_samples = lround(particle_set_size_ * 0.25);
+//  for (int i = 0; i < new_samples; i++)
+//  {
+//    sample_to_replace = rand() % particle_set_size_;
+//    particles_resampled.at(sample_to_replace) = random_particle_generator_.generateParticle();
+//  }
 
   pose_estimate_ = best_pose;
   particles_ = particles_resampled;
