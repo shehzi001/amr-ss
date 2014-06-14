@@ -87,7 +87,7 @@ class RandomizedRoadmapPlanner:
                     node_pose = self.graph.node_attributes(identifier)
                     path_to_target.append(node_pose[0][1])                    
             except NodeUnreachable:
-                # Create a new random point 
+                # Create a new random point in map dimensions
                 random_point_x = uniform(self.dimensions[0][0],self.dimensions[0][1])
                 random_point_y = uniform(self.dimensions[1][0],self.dimensions[1][1])
                 random_point = (random_point_x, random_point_y)
@@ -124,6 +124,19 @@ class RandomizedRoadmapPlanner:
         Has an effect only if both points have a corresponding node in the
         graph and if those nodes are connected by an edge.
         """
+        rospy.logwarn("Removing Edge {0} {1}".format(point1,point2));
+        node_id_1=None;
+        node_id_2=None;
+        for node_identifier, attr in self.graph.node_attr.iteritems():
+            position = attr[0][1]
+            if(point1 == position):
+                node_id_1 = node_identifier;
+            if(point2 == position):
+                node_id_2 = node_identifier;
+            if(node_id_1 != None and node_id_2 != None):
+                break;
+        
+        if(self.graph.has_edge((node_id_1,node_id_2))):
+            self.graph.del_edge((node_id_1,node_id_2));
+        rospy.logwarn("Edge {0} {1} Removed".format(point1,point2));
         pass
-
-#==============================================================================
