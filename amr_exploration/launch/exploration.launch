@@ -29,6 +29,7 @@
   <!-- Path executor node, use obstacle avoidance -->
   <node pkg="amr_navigation" type="path_executor.py" name="path_executor" output="screen" required="true">
     <param name="use_obstacle_avoidance" value="true" type="bool"/>
+    <param name="obstacle_avoidance_timeout" value="10" type="int"/>
   </node>
 
   <!-- Bug2 node -->
@@ -41,7 +42,7 @@
 
   <!-- Motion controller node with "diff" velocity controller -->
   <node pkg="amr_navigation" type="motion_controller" name="motion_controller" required="true">
-    <param name="controller" value="diff" type="str"/>
+    <param name="controller" value="omni" type="str"/>
   </node>
 
   <!-- Obstacle detector node -->

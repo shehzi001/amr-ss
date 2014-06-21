@@ -19,7 +19,7 @@ from amr_navigation.graph_visualizer import GraphVisualizer
 class PathPlannerNode:
 
     THRESHOLD = 50
-    RADIUS = 0.26
+    RADIUS = 0.75
     WIDTH = 0.50
 
     def __init__(self):
